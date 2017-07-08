@@ -1,5 +1,7 @@
 (ns lein-lambda.lambda
-  (:require [lein-lambda.s3 :as s3])
+  (:require [lein-lambda.s3 :as s3]
+            [lein-lambda.identitymanagement :as identitymanagement]
+            [robert.bruce :refer [try-try-again]])
   (:use [amazonica.aws.lambda]))
 
 (defn- function-config [{:keys [function-name handler memory-size timeout role description]
@@ -9,7 +11,7 @@
    :handler handler
    :memory-size memory-size
    :timeout timeout
-   :role (role :arn)
+   :role (identitymanagement/role-arn config)
    :runtime "java8"
    :description description
    :code {:s3-bucket (s3/bucket-name config)
@@ -20,9 +22,16 @@
     (get-function :function-name function-name)
     (catch Exception _ false)))
 
+; There seems to be a race condition in the Amazon API which can cause function creation
+; to fail if the role used has only recently been created. So retry until this succeeds.
+; See:
+;   https://stackoverflow.com/questions/36419442/the-role-defined-for-the-function-cannot-be-assumed-by-lambda
+;   https://stackoverflow.com/questions/37503075/invalidparametervalueexception-the-role-defined-for-the-function-cannot-be-assu
 (defn- deploy-create [function-config]
   (println "Creating lambda function" (function-config :function-name))
-  (create-function function-config))
+  (try-try-again
+    {:decay :exponential :sleep 1000 :tries 5}
+    create-function function-config))
 
 (defn- deploy-update [function-config]
   (println "Updating lambda function" (function-config :function-name))

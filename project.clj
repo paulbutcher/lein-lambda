@@ -7,5 +7,6 @@
                  [amazonica "0.3.106" :exclusions [com.amazonaws/aws-java-sdk
                                                    com.amazonaws/amazon-kinesis-client
                                                    com.amazonaws/dynamodb-streams-kinesis-adapter]]
-                 [prismatic/schema "1.1.6"]]
+                 [prismatic/schema "1.1.6"]
+                 [robert/bruce "0.8.0"]]
   :eval-in-leiningen true)

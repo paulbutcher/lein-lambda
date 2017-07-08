@@ -4,7 +4,7 @@
 
 (defn bucket-name [{:keys [function-name] {:keys [bucket]} :s3}]
   (or bucket
-    (str function-name (identitymanagement/account-id))))
+    (str function-name "-" (identitymanagement/account-id))))
 
 (defn bucket-key []
   "jar-file")
