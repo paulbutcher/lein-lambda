@@ -2,7 +2,9 @@
   (:require [lein-lambda.s3 :as s3])
   (:use [amazonica.aws.lambda]))
 
-(defn- function-config [{:keys [function-name handler memory-size timeout role description] :as config}]
+(defn- function-config [{:keys [function-name handler memory-size timeout role description]
+                         :or {memory-size 512 timeout 60 description ""}
+                         :as config}]
   {:function-name function-name
    :handler handler
    :memory-size memory-size
