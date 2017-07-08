@@ -2,7 +2,7 @@
   (:require [lein-lambda.identitymanagement :as identitymanagement])
   (:use [amazonica.aws.s3]))
 
-(defn bucket-name [{:keys [function-name] {:keys [bucket]} :s3}]
+(defn bucket-name [{{:keys [bucket]} :s3 {:keys [function-name]} :function}]
   (or bucket
     (str function-name "-" (identitymanagement/account-id))))
 

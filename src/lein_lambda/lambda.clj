@@ -4,14 +4,14 @@
             [robert.bruce :refer [try-try-again]])
   (:use [amazonica.aws.lambda]))
 
-(defn- function-config [{:keys [function-name handler memory-size timeout role description]
-                         :or {memory-size 512 timeout 60 description ""}
+(defn- function-config [{{:keys [function-name handler memory-size timeout role description]
+                          :or {memory-size 512 timeout 60 description ""}} :function
                          :as config}]
   {:function-name function-name
    :handler handler
    :memory-size memory-size
    :timeout timeout
-   :role (identitymanagement/role-arn config)
+   :role (identitymanagement/role-arn role config)
    :runtime "java8"
    :description description
    :code {:s3-bucket (s3/bucket-name config)
