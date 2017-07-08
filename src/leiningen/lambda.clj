@@ -7,7 +7,7 @@
 (defn- deploy [project config]
   (let [jar-file (uberjar project)]
     (s3/upload config jar-file)
-    (lambda/update-function config)))
+    (lambda/deploy config)))
 
 (defn lambda
   "TODO: Write documentation"
