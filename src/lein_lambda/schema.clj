@@ -4,10 +4,10 @@
 (def Config
   {:function-name s/Str
    :handler s/Str
-   :memory-size s/Int
-   :timeout s/Int
-   :s3 {:bucket s/Str}
-   :policy {:name s/Str}
+   (s/optional-key :memory-size) s/Int
+   (s/optional-key :timeout) s/Int
+   (s/optional-key :s3) {:bucket s/Str}
+   (s/optional-key :policy) {:name s/Str}
    (s/optional-key :profile) s/Str
    (s/optional-key :region) s/Str})
 

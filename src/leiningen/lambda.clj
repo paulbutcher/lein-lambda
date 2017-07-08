@@ -1,10 +1,16 @@
 (ns leiningen.lambda
-  (:require [lein-lambda.schema :refer [validate-config]])
-  (:use [amazonica.aws.lambda]))
+  (:require [leiningen.uberjar :refer [uberjar]]
+            [lein-lambda.schema :refer [validate-config]]
+            [lein-lambda.s3 :as s3]))
+
+(defn- deploy [project config]
+  (let [jar-file (uberjar project)]
+    (s3/upload jar-file config)))
 
 (defn lambda
   "TODO: Write documentation"
-  [project & args]
+  [project action & args]
   (let [config (project :lambda)]
     (validate-config config)
-    (println (list-functions))))
+    (case action
+      "deploy" (deploy project config))))
