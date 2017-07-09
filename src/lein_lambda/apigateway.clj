@@ -79,10 +79,25 @@
                             :type "AWS_PROXY"
                             :uri (integration-arn function-arn))))
 
+(def stage-name "production")
+
+(defn find-stage [api-id]
+  (try
+    (amazon/get-stage :restapi-id api-id
+                      :stage-name stage-name)
+    (catch Exception _ false)))
+
+(defn- maybe-create-deployment [api-id]
+  (or
+    (find-stage api-id)
+    (amazon/create-deployment :restapi-id api-id
+                              :stage-name stage-name)))
+
 (defn deploy [{{:keys [name]} :api-gateway} function-arn]
   (when name
     (let [api-id (maybe-create-api name)
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
-        (maybe-create-integration api-id proxy-id function-arn)))))
+        (maybe-create-integration api-id proxy-id function-arn)
+        (maybe-create-deployment api-id)))))
