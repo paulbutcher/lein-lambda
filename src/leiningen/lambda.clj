@@ -2,12 +2,14 @@
   (:require [leiningen.uberjar :refer [uberjar]]
             [lein-lambda.schema :refer [validate-config]]
             [lein-lambda.s3 :as s3]
-            [lein-lambda.lambda :as lambda]))
+            [lein-lambda.lambda :as lambda]
+            [lein-lambda.apigateway :as apigateway]))
 
 (defn- deploy [project config]
   (let [jar-file (uberjar project)]
-    (s3/upload config jar-file)
-    (lambda/deploy config)))
+    (s3/upload config jar-file))
+  (lambda/deploy config)
+  (apigateway/deploy config))
 
 (defn lambda
   "TODO: Write documentation"
