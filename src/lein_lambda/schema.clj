@@ -11,7 +11,8 @@
     (s/optional-key :role) {(s/optional-key :name) s/Str
                             (s/optional-key :arn) s/Str}}
    (s/optional-key :s3) {:bucket s/Str}
-   (s/optional-key :api-gateway) {:name s/Str}})
+   (s/optional-key :api-gateway) {:name s/Str}
+   (s/optional-key :warmup) s/Bool})
 
 (defn validate-config [config]
   (s/validate Config config))

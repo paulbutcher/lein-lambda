@@ -2,14 +2,25 @@
   (:require [lein-lambda.s3 :as s3]
             [lein-lambda.identitymanagement :as identitymanagement]
             [robert.bruce :refer [try-try-again]]
-            [amazonica.aws.lambda :as amazon]))
+            [amazonica.aws.lambda :as amazon]
+            [clojure.string :as string]))
 
-(defn allow-api-gateway [function-name source-arn]
+(defn get-arn-components [function-arn]
+  (let [components (string/split function-arn #":")]
+    [(nth components 3) (nth components 4) (nth components 6)]))
+
+(defn- add-permission [function-name source-arn principal statement-id]
   (amazon/add-permission :function-name function-name
                          :action "lambda:InvokeFunction"
-                         :principal "apigateway.amazonaws.com"
+                         :principal principal
                          :source-arn source-arn
-                         :statement-id "lein-lambda"))
+                         :statement-id statement-id))
+
+(defn allow-api-gateway [function-name source-arn]
+  (add-permission function-name source-arn "apigateway.amazonaws.com" "lein-lambda-apigateway"))
+
+(defn allow-wakeup [function-name source-arn]
+  (add-permission function-name source-arn "events.amazonaws.com" "lein-lambda-warmup"))
 
 (defn- function-config [{{:keys [function-name handler memory-size timeout role description]
                           :or {memory-size 512 timeout 60 description ""}} :function

@@ -1,11 +1,6 @@
 (ns lein-lambda.apigateway
   (:require [amazonica.aws.apigateway :as amazon]
-            [clojure.string :as string]
             [lein-lambda.lambda :as lambda]))
-
-(defn- get-arn-components [function-arn]
-  (let [components (string/split function-arn #":")]
-    [(nth components 3) (nth components 4) (nth components 6)]))
 
 (defn- target-arn [function-arn region]
   (str "arn:aws:apigateway:" 
@@ -28,6 +23,7 @@
          (first (filter #(get % :name) apis)))))
 
 (defn- create-api [name function-name region account-id]
+  (println "Creating API:" name)
   (let [api-id (:id (amazon/create-rest-api :name name))]
     (lambda/allow-api-gateway function-name
                               (source-arn api-id region account-id))
@@ -53,11 +49,15 @@
     [(find-path root-path resources)
      (find-path proxy-path resources)]))
 
+(defn- create-proxy-resource [api-id root-id]
+  (println "Creating proxy resource")
+  (:id (amazon/create-resource :restapi-id api-id
+                               :parent-id root-id
+                               :path-part proxy-path-part)))
+
 (defn- maybe-create-proxy-resource [api-id root-id proxy-id]
   (or proxy-id
-    (:id (amazon/create-resource :restapi-id api-id
-                                 :parent-id root-id
-                                 :path-part proxy-path-part))))
+    (create-proxy-resource api-id root-id)))
 
 (def http-method "ANY")
 
@@ -68,14 +68,18 @@
                        :restapi-id api-id)
     (catch Exception _ false)))
 
+(defn- create-method [api-id proxy-id]
+  (println "Creating method")
+  (amazon/put-method :restapi-id api-id
+                     :resource-id proxy-id
+                     :http-method http-method
+                     :authorization-type "NONE"
+                     :request-parameters {"method.request.path.proxy" true}))
+
 (defn- maybe-create-method [api-id proxy-id]
   (or
     (find-method api-id proxy-id)
-    (amazon/put-method :restapi-id api-id
-                       :resource-id proxy-id
-                       :http-method http-method
-                       :authorization-type "NONE"
-                       :request-parameters {"method.request.path.proxy" true})))
+    (create-method api-id proxy-id)))
 
 (defn- find-integration [api-id proxy-id]
   (try
@@ -85,6 +89,7 @@
     (catch Exception _ false)))
 
 (defn- create-integration [api-id proxy-id function-arn region]
+  (println "Creating integration")
   (amazon/put-integration :restapi-id api-id
                           :resource-id proxy-id
                           :http-method http-method
@@ -106,15 +111,19 @@
                       :stage-name stage-name)
     (catch Exception _ false)))
 
+(defn- create-deployment [api-id]
+  (println "Creating deployment")
+  (amazon/create-deployment :restapi-id api-id
+                            :stage-name stage-name))
+
 (defn- maybe-create-deployment [api-id]
   (or
     (find-stage api-id)
-    (amazon/create-deployment :restapi-id api-id
-                              :stage-name stage-name)))
+    (create-deployment api-id)))
 
 (defn deploy [{{:keys [name]} :api-gateway} function-arn]
   (when name
-    (let [[region account-id function-name] (get-arn-components function-arn)
+    (let [[region account-id function-name] (lambda/get-arn-components function-arn)
           api-id (maybe-create-api name function-name region account-id)
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
