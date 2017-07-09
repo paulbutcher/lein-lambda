@@ -38,7 +38,8 @@
   (amazon/update-function-configuration function-config))
 
 (defn deploy [config]
-  (let [function-config (function-config config)]
-    (if (function-exists? function-config)
-      (deploy-update function-config)
-      (deploy-create function-config))))
+  (:function-arn 
+    (let [function-config (function-config config)]
+      (if (function-exists? function-config)
+        (deploy-update function-config)
+        (deploy-create function-config)))))

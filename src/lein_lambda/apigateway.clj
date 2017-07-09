@@ -1,5 +1,6 @@
 (ns lein-lambda.apigateway
-  (:require [amazonica.aws.apigateway :as amazon]))
+  (:require [amazonica.aws.apigateway :as amazon]
+            [clojure.string :as string]))
 
 (defn- find-api [name]
   (let [apis ((amazon/get-rest-apis :limit 500) :items)]
@@ -36,22 +37,52 @@
 (defn- find-method [api-id proxy-id]
   (try
     (amazon/get-method :http-method http-method
-                      :resource-id proxy-id
-                      :restapi-id api-id)
+                       :resource-id proxy-id
+                       :restapi-id api-id)
     (catch Exception _ false)))
 
 (defn- maybe-create-method [api-id proxy-id]
   (or
     (find-method api-id proxy-id)
     (amazon/put-method :restapi-id api-id
-                      :resource-id proxy-id
-                      :http-method http-method
-                      :authorization-type "NONE"
-                      :request-parameters {"method.request.path.proxy" true})))
+                       :resource-id proxy-id
+                       :http-method http-method
+                       :authorization-type "NONE"
+                       :request-parameters {"method.request.path.proxy" true})))
 
-(defn deploy [{{:keys [name]} :api-gateway}]
+(defn- get-region [function-arn]
+  (-> function-arn
+    (string/split #":")
+    (nth 4)))
+
+(defn- integration-arn [function-arn]
+  (str "arn:aws:apigateway:" 
+       (get-region function-arn)
+       ":lambda:path/2015-03-31/functions/"
+       function-arn
+       "/invocations"))
+
+(defn- find-integration [api-id proxy-id]
+  (try
+    (amazon/get-integration :http-method http-method
+                            :resource-id proxy-id
+                            :restapi-id api-id)
+    (catch Exception _ false)))
+
+(defn- maybe-create-integration [api-id proxy-id function-arn]
+  (or
+    (find-integration api-id proxy-id)
+    (amazon/put-integration :restapi-id api-id
+                            :resource-id proxy-id
+                            :http-method http-method
+                            :integration-http-method "POST"
+                            :type "AWS_PROXY"
+                            :uri (integration-arn function-arn))))
+
+(defn deploy [{{:keys [name]} :api-gateway} function-arn]
   (when name
     (let [api-id (maybe-create-api name)
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
-            method-id (maybe-create-method api-id proxy-id)]))))
+            method-id (maybe-create-method api-id proxy-id)]
+        (maybe-create-integration api-id proxy-id function-arn)))))
