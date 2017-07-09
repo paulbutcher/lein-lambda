@@ -4,6 +4,13 @@
             [robert.bruce :refer [try-try-again]]
             [amazonica.aws.lambda :as amazon]))
 
+(defn allow-api-gateway [function-name source-arn]
+  (amazon/add-permission :function-name function-name
+                         :action "lambda:InvokeFunction"
+                         :principal "apigateway.amazonaws.com"
+                         :source-arn source-arn
+                         :statement-id "1234"))
+
 (defn- function-config [{{:keys [function-name handler memory-size timeout role description]
                           :or {memory-size 512 timeout 60 description ""}} :function
                          :as config}]
