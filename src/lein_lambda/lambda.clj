@@ -1,8 +1,8 @@
 (ns lein-lambda.lambda
   (:require [lein-lambda.s3 :as s3]
             [lein-lambda.identitymanagement :as identitymanagement]
-            [robert.bruce :refer [try-try-again]])
-  (:use [amazonica.aws.lambda]))
+            [robert.bruce :refer [try-try-again]]
+            [amazonica.aws.lambda :as amazon]))
 
 (defn- function-config [{{:keys [function-name handler memory-size timeout role description]
                           :or {memory-size 512 timeout 60 description ""}} :function
@@ -19,7 +19,7 @@
 
 (defn- function-exists? [{:keys [function-name]}]
   (try
-    (get-function :function-name function-name)
+    (amazon/get-function :function-name function-name)
     (catch Exception _ false)))
 
 ; There seems to be a race condition in the Amazon API which can cause function creation
@@ -31,11 +31,11 @@
   (println "Creating lambda function" (function-config :function-name))
   (try-try-again
     {:decay :exponential :sleep 1000 :tries 5}
-    create-function function-config))
+    amazon/create-function function-config))
 
 (defn- deploy-update [function-config]
   (println "Updating lambda function" (function-config :function-name))
-  (update-function-configuration function-config))
+  (amazon/update-function-configuration function-config))
 
 (defn deploy [config]
   (let [function-config (function-config config)]

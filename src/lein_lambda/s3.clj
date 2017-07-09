@@ -1,6 +1,6 @@
 (ns lein-lambda.s3
-  (:require [lein-lambda.identitymanagement :as identitymanagement])
-  (:use [amazonica.aws.s3]))
+  (:require [lein-lambda.identitymanagement :as identitymanagement]
+            [amazonica.aws.s3 :as amazon]))
 
 (defn bucket-name [{{:keys [bucket]} :s3 {:keys [function-name]} :function}]
   (or bucket
@@ -11,7 +11,7 @@
 
 (defn- bucket-exists? [bucket-name]
   (try
-    (head-bucket :bucket-name bucket-name)
+    (amazon/head-bucket :bucket-name bucket-name)
     (catch Exception _ false)))
 
 ; Only create a bucket if no explicit bucket name is given
@@ -19,14 +19,14 @@
   (let [bucket-name (bucket-name config)]
     (when-not (or bucket (bucket-exists? bucket-name))
       (println "Creating bucket" bucket-name)
-      (create-bucket bucket-name))))
+      (amazon/create-bucket bucket-name))))
 
 (defn upload [config jar-file]
   (let [bucket-name (bucket-name config)]
     (create-bucket-if-necessary config)
     (identitymanagement/account-id)
     (println "Uploading" jar-file "to bucket" bucket-name)
-    (put-object :bucket-name bucket-name
-                :key (bucket-key)
-                :file jar-file)
+    (amazon/put-object :bucket-name bucket-name
+                       :key (bucket-key)
+                       :file jar-file)
     (println "Upload complete.")))
