@@ -9,7 +9,7 @@
                          :action "lambda:InvokeFunction"
                          :principal "apigateway.amazonaws.com"
                          :source-arn source-arn
-                         :statement-id "1234"))
+                         :statement-id "lein-lambda"))
 
 (defn- function-config [{{:keys [function-name handler memory-size timeout role description]
                           :or {memory-size 512 timeout 60 description ""}} :function

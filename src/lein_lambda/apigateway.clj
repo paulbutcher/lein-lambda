@@ -3,14 +3,40 @@
             [clojure.string :as string]
             [lein-lambda.lambda :as lambda]))
 
-(defn- find-api [name]
-  (let [apis ((amazon/get-rest-apis :limit 500) :items)]
-    (first (filter #(get % :name) apis))))
+(defn- get-arn-components [function-arn]
+  (let [components (string/split function-arn #":")]
+    [(nth components 3) (nth components 4) (nth components 6)]))
 
-(defn- maybe-create-api [name]
-  (:id (or
-         (find-api name)
-         (amazon/create-rest-api :name name))))
+(defn- target-arn [function-arn region]
+  (str "arn:aws:apigateway:" 
+       region
+       ":lambda:path/2015-03-31/functions/"
+       function-arn
+       "/invocations"))
+
+(defn- source-arn [api-id region account-id]
+  (str "arn:aws:execute-api:"
+       region
+       ":"
+       account-id
+       ":"
+       api-id
+       "/*/*/*"))
+
+(defn- find-api [name]
+  (:id (let [apis ((amazon/get-rest-apis :limit 500) :items)]
+         (first (filter #(get % :name) apis)))))
+
+(defn- create-api [name function-name region account-id]
+  (let [api-id (:id (amazon/create-rest-api :name name))]
+    (lambda/allow-api-gateway function-name
+                              (source-arn api-id region account-id))
+    api-id))
+
+(defn- maybe-create-api [name function-name region account-id]
+  (or
+    (find-api name)
+    (create-api name function-name region account-id)))
 
 (def root-path "/")
 (def proxy-path-part "{proxy+}")
@@ -51,26 +77,6 @@
                        :authorization-type "NONE"
                        :request-parameters {"method.request.path.proxy" true})))
 
-(defn- get-arn-components [function-arn]
-  (let [components (string/split function-arn #":")]
-    [(nth components 3) (nth components 4) (nth components 6)]))
-
-(defn- target-arn [function-arn region]
-  (str "arn:aws:apigateway:" 
-       region
-       ":lambda:path/2015-03-31/functions/"
-       function-arn
-       "/invocations"))
-
-(defn- source-arn [api-id region account-id]
-  (str "arn:aws:execute-api:"
-       region
-       ":"
-       account-id
-       ":"
-       api-id
-       "/*/*/*"))
-
 (defn- find-integration [api-id proxy-id]
   (try
     (amazon/get-integration :http-method http-method
@@ -78,22 +84,19 @@
                             :restapi-id api-id)
     (catch Exception _ false)))
 
-(defn- create-integration [api-id proxy-id function-arn]
-  (let [[region account-id function-name] (get-arn-components function-arn)]
-    (amazon/put-integration :restapi-id api-id
-                            :resource-id proxy-id
-                            :http-method http-method
-                            :integration-http-method "POST"
-                            :type "AWS_PROXY"
-                            :passthrough-behavior "WHEN_NO_MATCH"
-                            :uri (target-arn function-arn region))
-    (lambda/allow-api-gateway function-name
-                              (source-arn api-id region account-id))))
+(defn- create-integration [api-id proxy-id function-arn region]
+  (amazon/put-integration :restapi-id api-id
+                          :resource-id proxy-id
+                          :http-method http-method
+                          :integration-http-method "POST"
+                          :type "AWS_PROXY"
+                          :passthrough-behavior "WHEN_NO_MATCH"
+                          :uri (target-arn function-arn region)))
 
-(defn- maybe-create-integration [api-id proxy-id function-arn]
+(defn- maybe-create-integration [api-id proxy-id function-arn region]
   (or
     (find-integration api-id proxy-id)
-    (create-integration api-id proxy-id function-arn)))  
+    (create-integration api-id proxy-id function-arn region)))  
 
 (def stage-name "production")
 
@@ -111,9 +114,10 @@
 
 (defn deploy [{{:keys [name]} :api-gateway} function-arn]
   (when name
-    (let [api-id (maybe-create-api name)
+    (let [[region account-id function-name] (get-arn-components function-arn)
+          api-id (maybe-create-api name function-name region account-id)
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
-        (maybe-create-integration api-id proxy-id function-arn)
+        (maybe-create-integration api-id proxy-id function-arn region)
         (maybe-create-deployment api-id)))))
