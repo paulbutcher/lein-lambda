@@ -22,7 +22,7 @@
 (defn allow-wakeup [function-name source-arn]
   (add-permission function-name source-arn "events.amazonaws.com" "lein-lambda-warmup"))
 
-(defn- mk-function-config [{{:keys [function-name handler memory-size timeout role description]
+(defn- mk-function-config [{{:keys [function-name handler memory-size timeout description]
                              :or {memory-size 512 timeout 60 description ""}} :function
                             :as config}
                            stage]
@@ -30,7 +30,7 @@
    :handler handler
    :memory-size memory-size
    :timeout timeout
-   :role (identitymanagement/role-arn role config)
+   :role (identitymanagement/role-arn config)
    :runtime "java8"
    :description description
    :code {:s3-bucket (s3/bucket-name config stage)

@@ -34,8 +34,7 @@
       (maybe-get-role-arn role-name)
       (deploy-role role-name))))
 
-(defn role-arn [{:keys [arn name]} {{:keys [function-name]} :function}]
-  (cond
-    arn arn
-    name (get-role-arn name)
-    :else (maybe-deploy-role function-name)))
+(defn role-arn [{{:keys [role function-name]} :function}]
+  (if role
+    (get-role-arn role)
+    (maybe-deploy-role function-name)))
