@@ -2,9 +2,9 @@
   (:require [lein-lambda.identitymanagement :as identitymanagement]
             [amazonica.aws.s3 :as amazon]))
 
-(defn bucket-name [{{:keys [bucket]} :s3 {:keys [function-name]} :function} stage]
+(defn bucket-name [{{:keys [bucket]} :s3 {:keys [name]} :function} stage]
   (or bucket
-    (str function-name "-" stage "-" (identitymanagement/account-id))))
+    (str name "-" stage "-" (identitymanagement/account-id))))
 
 (defn bucket-key []
   "jar-file")

@@ -3,7 +3,7 @@
             [clojure.pprint :refer [pprint]]))
 
 (def BaseConfig
-  {(s/optional-key :function) {(s/optional-key :function-name) s/Str
+  {(s/optional-key :function) {(s/optional-key :name) s/Str
                                (s/optional-key :handler) s/Str
                                (s/optional-key :description) s/Str
                                (s/optional-key :memory-size) s/Int
