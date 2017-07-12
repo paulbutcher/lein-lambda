@@ -31,6 +31,7 @@
    :timeout timeout
    :role (identitymanagement/role-arn config)
    :runtime "java8"
+   :publish true
    :description description
    :code {:s3-bucket (s3/bucket-name config)
           :s3-key (s3/bucket-key)}})
@@ -53,11 +54,18 @@
 
 (defn- deploy-update [function-config]
   (println "Updating lambda function" (function-config :function-name))
-  (amazon/update-function-configuration function-config))
+  (amazon/update-function-configuration function-config)
+  ; Annoyingly, update-function-code takes its s3-bucket and s3-key arguments at the
+  ; top level, meaning that we can't use function-config as-is :-(
+  (let [update-code-config (merge function-config (function-config :code))]
+    (amazon/update-function-code update-code-config)))
+
+(defn- create-or-update [function-config]
+  (if (function-exists? function-config)
+    (deploy-update function-config)
+    (deploy-create function-config)))
 
 (defn deploy [config]
-  (:function-arn 
-    (let [function-config (mk-function-config config)]
-      (if (function-exists? function-config)
-        (deploy-update function-config)
-        (deploy-create function-config)))))
+  (let [{:keys [version function-arn]} (create-or-update (mk-function-config config))]
+    (println "Deployed as version" version)
+    function-arn))
