@@ -9,8 +9,8 @@
 
 (defn- deploy [project config stage]
   (let [jar-file (uberjar project)]
-    (s3/upload config jar-file stage))
-  (let [function-arn (lambda/deploy config stage)]
+    (s3/upload config jar-file))
+  (let [function-arn (lambda/deploy config)]
     (apigateway/deploy config function-arn)
     (cloudwatchevents/deploy config function-arn)))
 

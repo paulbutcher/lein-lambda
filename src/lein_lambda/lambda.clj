@@ -24,8 +24,7 @@
 
 (defn- mk-function-config [{{:keys [name handler memory-size timeout description]
                              :or {memory-size 512 timeout 60 description ""}} :function
-                            :as config}
-                           stage]
+                            :as config}]
   {:function-name name
    :handler handler
    :memory-size memory-size
@@ -33,7 +32,7 @@
    :role (identitymanagement/role-arn config)
    :runtime "java8"
    :description description
-   :code {:s3-bucket (s3/bucket-name config stage)
+   :code {:s3-bucket (s3/bucket-name config)
           :s3-key (s3/bucket-key)}})
 
 (defn- function-exists? [{:keys [function-name]}]
@@ -56,9 +55,9 @@
   (println "Updating lambda function" (function-config :function-name))
   (amazon/update-function-configuration function-config))
 
-(defn deploy [config stage]
+(defn deploy [config]
   (:function-arn 
-    (let [function-config (mk-function-config config stage)]
+    (let [function-config (mk-function-config config)]
       (if (function-exists? function-config)
         (deploy-update function-config)
         (deploy-create function-config)))))
