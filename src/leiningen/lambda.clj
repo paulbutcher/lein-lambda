@@ -1,7 +1,7 @@
 (ns leiningen.lambda
   (:require [leiningen.uberjar :refer [uberjar]]
             [clojure.pprint :refer [pprint]]
-            [lein-lambda.schema :refer [get-config]]
+            [lein-lambda.config :refer [get-config]]
             [lein-lambda.s3 :as s3]
             [lein-lambda.lambda :as lambda]
             [lein-lambda.apigateway :as apigateway]

@@ -1,4 +1,4 @@
-(ns lein-lambda.schema
+(ns lein-lambda.config
   (:require [schema.core :as s]
             [clojure.pprint :refer [pprint]]))
 
