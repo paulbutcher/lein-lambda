@@ -2,9 +2,9 @@
   (:require [lein-lambda.identitymanagement :as identitymanagement]
             [amazonica.aws.s3 :as amazon]))
 
-(defn bucket-name [{{:keys [bucket]} :s3 {:keys [function-name]} :function}]
+(defn bucket-name [{{:keys [bucket]} :s3 {:keys [function-name]} :function} stage]
   (or bucket
-    (str function-name "-" (identitymanagement/account-id))))
+    (str function-name "-" stage "-" (identitymanagement/account-id))))
 
 (defn bucket-key []
   "jar-file")
@@ -15,15 +15,15 @@
     (catch Exception _ false)))
 
 ; Only create a bucket if no explicit bucket name is given
-(defn- create-bucket-if-necessary [{{:keys [bucket]} :s3 :as config}]
-  (let [bucket-name (bucket-name config)]
+(defn- create-bucket-if-necessary [{{:keys [bucket]} :s3 :as config} stage]
+  (let [bucket-name (bucket-name config stage)]
     (when-not (or bucket (bucket-exists? bucket-name))
       (println "Creating bucket" bucket-name)
       (amazon/create-bucket bucket-name))))
 
-(defn upload [config jar-file]
-  (let [bucket-name (bucket-name config)]
-    (create-bucket-if-necessary config)
+(defn upload [config jar-file stage]
+  (let [bucket-name (bucket-name config stage)]
+    (create-bucket-if-necessary config stage)
     (identitymanagement/account-id)
     (println "Uploading" jar-file "to bucket" bucket-name)
     (amazon/put-object :bucket-name bucket-name
