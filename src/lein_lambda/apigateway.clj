@@ -103,25 +103,23 @@
     (find-integration api-id proxy-id)
     (create-integration api-id proxy-id function-arn region)))  
 
-(def stage-name "production")
-
-(defn find-stage [api-id]
+(defn find-stage [api-id stage]
   (try
     (amazon/get-stage :restapi-id api-id
-                      :stage-name stage-name)
+                      :stage-name stage)
     (catch Exception _ false)))
 
-(defn- create-deployment [api-id]
+(defn- create-deployment [api-id stage]
   (println "Creating deployment")
   (amazon/create-deployment :restapi-id api-id
-                            :stage-name stage-name))
+                            :stage-name stage))
 
-(defn- maybe-create-deployment [api-id]
+(defn- maybe-create-deployment [api-id stage]
   (or
-    (find-stage api-id)
-    (create-deployment api-id)))
+    (find-stage api-id stage)
+    (create-deployment api-id stage)))
 
-(defn deploy [{{:keys [name]} :api-gateway} function-arn]
+(defn deploy [{{:keys [name]} :api-gateway} function-arn stage]
   (when name
     (let [[region account-id function-name] (lambda/get-arn-components function-arn)
           api-id (maybe-create-api name function-name region account-id)
@@ -129,4 +127,4 @@
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
         (maybe-create-integration api-id proxy-id function-arn region)
-        (maybe-create-deployment api-id)))))
+        (maybe-create-deployment api-id stage)))))

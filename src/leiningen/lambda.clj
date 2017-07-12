@@ -11,7 +11,7 @@
   (let [jar-file (uberjar project)]
     (s3/upload config jar-file))
   (let [function-arn (lambda/deploy config)]
-    (apigateway/deploy config function-arn)
+    (apigateway/deploy config function-arn stage)
     (cloudwatchevents/deploy config function-arn)))
 
 (defn lambda
