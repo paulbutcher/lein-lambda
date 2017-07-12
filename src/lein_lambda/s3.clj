@@ -19,12 +19,11 @@
   (let [bucket-name (bucket-name config stage)]
     (when-not (or bucket (bucket-exists? bucket-name))
       (println "Creating bucket" bucket-name)
-      (amazon/create-bucket bucket-name))))
+      (amazon/create-bucket bucket-name))
+    bucket-name))
 
 (defn upload [config jar-file stage]
-  (let [bucket-name (bucket-name config stage)]
-    (create-bucket-if-necessary config stage)
-    (identitymanagement/account-id)
+  (let [bucket-name (create-bucket-if-necessary config stage)]
     (println "Uploading" jar-file "to bucket" bucket-name)
     (amazon/put-object :bucket-name bucket-name
                        :key (bucket-key)
