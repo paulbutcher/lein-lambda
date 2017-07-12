@@ -38,7 +38,7 @@
     (find-target function-arn)
     (create-target rule-arn function-arn)))
 
-(defn deploy [{:keys [warmup] :or {warmup true}} function-arn]
-  (when warmup
+(defn deploy [{{:keys [enable] :or {enable true}} :warmup} function-arn]
+  (when enable
     (let [rule-arn (maybe-create-rule)]
       (maybe-create-target rule-arn function-arn))))
