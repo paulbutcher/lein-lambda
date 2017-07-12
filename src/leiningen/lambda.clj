@@ -1,6 +1,7 @@
 (ns leiningen.lambda
   (:require [leiningen.uberjar :refer [uberjar]]
-            [lein-lambda.schema :refer [validate-config]]
+            [clojure.pprint :refer [pprint]]
+            [lein-lambda.schema :refer [get-config]]
             [lein-lambda.s3 :as s3]
             [lein-lambda.lambda :as lambda]
             [lein-lambda.apigateway :as apigateway]
@@ -15,8 +16,7 @@
 
 (defn lambda
   "TODO: Write documentation"
-  [project action & args]
-  (let [config (project :lambda)]
-    (validate-config config)
+  [project action stage & args]
+  (let [config (get-config (project :lambda) stage)]
     (case action
       "deploy" (deploy project config))))
