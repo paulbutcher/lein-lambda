@@ -22,10 +22,10 @@
 (defn allow-wakeup [function-name source-arn]
   (add-permission function-name source-arn "events.amazonaws.com" "lein-lambda-warmup"))
 
-(defn- function-config [{{:keys [function-name handler memory-size timeout role description]
-                          :or {memory-size 512 timeout 60 description ""}} :function
-                         :as config}
-                        stage]
+(defn- mk-function-config [{{:keys [function-name handler memory-size timeout role description]
+                             :or {memory-size 512 timeout 60 description ""}} :function
+                            :as config}
+                           stage]
   {:function-name function-name
    :handler handler
    :memory-size memory-size
@@ -58,7 +58,7 @@
 
 (defn deploy [config stage]
   (:function-arn 
-    (let [function-config (function-config config stage)]
+    (let [function-config (mk-function-config config stage)]
       (if (function-exists? function-config)
         (deploy-update function-config)
         (deploy-create function-config)))))
