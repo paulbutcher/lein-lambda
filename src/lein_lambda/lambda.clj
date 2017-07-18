@@ -46,26 +46,40 @@
 ; See:
 ;   https://stackoverflow.com/questions/36419442/the-role-defined-for-the-function-cannot-be-assumed-by-lambda
 ;   https://stackoverflow.com/questions/37503075/invalidparametervalueexception-the-role-defined-for-the-function-cannot-be-assu
-(defn- deploy-create [function-config]
-  (println "Creating lambda function" (function-config :function-name))
+(defn- deploy-create [{:keys [function-name] :as function-config}]
+  (println "Creating lambda function" function-name)
   (try-try-again
     {:decay :exponential :sleep 1000 :tries 5}
     amazon/create-function function-config))
 
-(defn- deploy-update [function-config]
-  (println "Updating lambda function" (function-config :function-name))
+(defn- deploy-update [{:keys [function-name code] :as function-config}]
+  (println "Updating lambda function" function-name)
   (amazon/update-function-configuration function-config)
   ; Annoyingly, update-function-code takes its s3-bucket and s3-key arguments at the
   ; top level, meaning that we can't use function-config as-is :-(
-  (let [update-code-config (merge function-config (function-config :code))]
-    (amazon/update-function-code update-code-config)))
+  (amazon/update-function-code (merge function-config code)))
 
 (defn- create-or-update [function-config]
   (if (function-exists? function-config)
     (deploy-update function-config)
     (deploy-create function-config)))
 
-(defn deploy [config]
-  (let [{:keys [version function-arn]} (create-or-update (mk-function-config config))]
+(defn- alias-exists? [function-name stage]
+  (try
+    (amazon/get-alias :function-name function-name
+                      :name stage)
+    (catch Exception _ false)))
+
+(defn- create-or-update-alias [function-name stage version]
+  (println "Setting alias" stage "to point to version" version)
+  (let [alias-config {:function-name function-name
+                      :name stage
+                      :function-version version}]
+    (if (alias-exists? function-name stage)
+      (amazon/update-alias alias-config)
+      (amazon/create-alias alias-config))))
+
+(defn deploy [config stage]
+  (let [{:keys [version function-name]} (create-or-update (mk-function-config config))]
     (println "Deployed as version" version)
-    function-arn))
+    (:alias-arn (create-or-update-alias function-name stage version))))
