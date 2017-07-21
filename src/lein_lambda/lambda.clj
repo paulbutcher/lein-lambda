@@ -9,18 +9,27 @@
   (let [components (string/split function-arn #":")]
     [(nth components 3) (nth components 4) (nth components 6)]))
 
-(defn- add-permission [function-name source-arn principal statement-id]
+(defn- add-permission [function-name source-arn principal statement-id stage]
   (amazon/add-permission :function-name function-name
+                         :qualifier stage
                          :action "lambda:InvokeFunction"
                          :principal principal
                          :source-arn source-arn
                          :statement-id statement-id))
 
-(defn allow-api-gateway [function-name source-arn]
-  (add-permission function-name source-arn "apigateway.amazonaws.com" "lein-lambda-apigateway"))
+(defn allow-api-gateway [function-name source-arn stage]
+  (add-permission function-name 
+                  source-arn
+                  "apigateway.amazonaws.com"
+                  "lein-lambda-apigateway"
+                  stage))
 
-(defn allow-wakeup [function-name source-arn]
-  (add-permission function-name source-arn "events.amazonaws.com" "lein-lambda-warmup"))
+(defn allow-wakeup [function-name source-arn stage]
+  (add-permission function-name 
+                  source-arn 
+                  "events.amazonaws.com" 
+                  "lein-lambda-warmup"
+                  stage))
 
 (defn- mk-function-config [{{:keys [name handler memory-size timeout description]
                              :or {memory-size 512 timeout 60 description ""}} :function

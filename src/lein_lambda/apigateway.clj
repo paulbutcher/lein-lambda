@@ -2,12 +2,16 @@
   (:require [amazonica.aws.apigateway :as amazon]
             [lein-lambda.lambda :as lambda]))
 
-(defn- target-arn [function-arn region]
+(defn- target-arn [region account-id function-name]
   (str "arn:aws:apigateway:" 
        region
-       ":lambda:path/2015-03-31/functions/"
-       function-arn
-       "/invocations"))
+       ":lambda:path/2015-03-31/functions/arn:aws:lambda:"
+       region
+       ":"
+       account-id
+       ":function:"
+       function-name
+       ":${stageVariables.stage}/invocations"))
 
 (defn- source-arn [api-id region account-id]
   (str "arn:aws:execute-api:"
@@ -26,7 +30,8 @@
   (println "Creating API:" name)
   (let [api-id (:id (amazon/create-rest-api :name name))]
     (lambda/allow-api-gateway function-name
-                              (source-arn api-id region account-id))
+                              (source-arn api-id region account-id)
+                              "production")
     api-id))
 
 (defn- maybe-create-api [name function-name region account-id]
@@ -88,7 +93,7 @@
                             :restapi-id api-id)
     (catch Exception _ false)))
 
-(defn- create-integration [api-id proxy-id function-arn region]
+(defn- create-integration [api-id proxy-id region account-id function-name]
   (println "Creating integration")
   (amazon/put-integration :restapi-id api-id
                           :resource-id proxy-id
@@ -96,12 +101,12 @@
                           :integration-http-method "POST"
                           :type "AWS_PROXY"
                           :passthrough-behavior "WHEN_NO_MATCH"
-                          :uri (target-arn function-arn region)))
+                          :uri (target-arn region account-id function-name)))
 
-(defn- maybe-create-integration [api-id proxy-id function-arn region]
+(defn- maybe-create-integration [api-id proxy-id region account-id function-name]
   (or
     (find-integration api-id proxy-id)
-    (create-integration api-id proxy-id function-arn region)))  
+    (create-integration api-id proxy-id region account-id function-name)))  
 
 (defn find-stage [api-id stage]
   (try
@@ -112,7 +117,8 @@
 (defn- create-deployment [api-id stage]
   (println "Creating deployment")
   (amazon/create-deployment :restapi-id api-id
-                            :stage-name stage))
+                            :stage-name stage
+                            :variables {"stage" stage}))
 
 (defn- maybe-create-deployment [api-id stage]
   (or
@@ -126,5 +132,5 @@
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
-        (maybe-create-integration api-id proxy-id function-arn region)
+        (maybe-create-integration api-id proxy-id region account-id function-name)
         (maybe-create-deployment api-id stage)))))

@@ -31,7 +31,7 @@
   (amazon/put-targets :targets [{:arn function-arn :id "warmup"}]
                       :rule rule-name)
   (let [[region account-id function-name] (lambda/get-arn-components function-arn)]
-    (lambda/allow-wakeup function-name rule-arn)))
+    (lambda/allow-wakeup function-name rule-arn "production")))
 
 (defn- maybe-create-target [rule-arn function-arn]
   (or
