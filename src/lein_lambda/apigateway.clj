@@ -26,18 +26,14 @@
   (:id (let [apis ((amazon/get-rest-apis :limit 500) :items)]
          (first (filter #(get % :name) apis)))))
 
-(defn- create-api [name function-name region account-id]
+(defn- create-api [name]
   (println "Creating API:" name)
-  (let [api-id (:id (amazon/create-rest-api :name name))]
-    (lambda/allow-api-gateway function-name
-                              (source-arn api-id region account-id)
-                              "production")
-    api-id))
+  (:id (amazon/create-rest-api :name name)))
 
-(defn- maybe-create-api [name function-name region account-id]
+(defn- maybe-create-api [name]
   (or
     (find-api name)
-    (create-api name function-name region account-id)))
+    (create-api name)))
 
 (def root-path "/")
 (def proxy-path-part "{proxy+}")
@@ -114,23 +110,26 @@
                       :stage-name stage)
     (catch Exception _ false)))
 
-(defn- create-deployment [api-id stage]
+(defn- create-deployment [api-id region account-id function-name stage]
   (println "Creating deployment")
   (amazon/create-deployment :restapi-id api-id
                             :stage-name stage
-                            :variables {"stage" stage}))
+                            :variables {"stage" stage})
+  (lambda/allow-api-gateway function-name
+                            (source-arn api-id region account-id)
+                            stage))
 
-(defn- maybe-create-deployment [api-id stage]
+(defn- maybe-create-deployment [api-id region account-id function-name stage]
   (or
     (find-stage api-id stage)
-    (create-deployment api-id stage)))
+    (create-deployment api-id region account-id function-name stage)))
 
 (defn deploy [{{:keys [name]} :api-gateway} function-arn stage]
   (when name
     (let [[region account-id function-name] (lambda/get-arn-components function-arn)
-          api-id (maybe-create-api name function-name region account-id)
+          api-id (maybe-create-api name)
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
         (maybe-create-integration api-id proxy-id region account-id function-name)
-        (maybe-create-deployment api-id stage)))))
+        (maybe-create-deployment api-id region account-id function-name stage)))))

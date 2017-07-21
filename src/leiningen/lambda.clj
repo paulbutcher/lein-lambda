@@ -12,7 +12,7 @@
     (s3/upload config jar-file))
   (let [function-arn (lambda/deploy config stage)]
     (apigateway/deploy config function-arn stage)
-    (cloudwatchevents/deploy config function-arn)))
+    (cloudwatchevents/deploy config function-arn stage)))
 
 (defn lambda
   "TODO: Write documentation"

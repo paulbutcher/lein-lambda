@@ -26,19 +26,19 @@
     (filter #(= function-arn (:arn %)))
     (first)))
 
-(defn- create-target [rule-arn function-arn]
+(defn- create-target [rule-arn function-arn stage]
   (println "Adding target to rule:" rule-name)
   (amazon/put-targets :targets [{:arn function-arn :id "warmup"}]
                       :rule rule-name)
   (let [[region account-id function-name] (lambda/get-arn-components function-arn)]
-    (lambda/allow-wakeup function-name rule-arn "production")))
+    (lambda/allow-wakeup function-name rule-arn stage)))
 
-(defn- maybe-create-target [rule-arn function-arn]
+(defn- maybe-create-target [rule-arn function-arn stage]
   (or
     (find-target function-arn)
-    (create-target rule-arn function-arn)))
+    (create-target rule-arn function-arn stage)))
 
-(defn deploy [{{:keys [enable] :or {enable true}} :warmup} function-arn]
+(defn deploy [{{:keys [enable] :or {enable true}} :warmup} function-arn stage]
   (when enable
     (let [rule-arn (maybe-create-rule)]
-      (maybe-create-target rule-arn function-arn))))
+      (maybe-create-target rule-arn function-arn stage))))
