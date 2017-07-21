@@ -14,7 +14,7 @@
    (s/optional-key :warmup) {:enable s/Bool}})
 
 (def Config (merge BaseConfig
-                   {(s/optional-key :stages) {s/Str BaseConfig}}))
+                   {:stages {s/Str BaseConfig}}))
 
 (defn get-config [config stage]
   (s/validate Config config)
