@@ -2,16 +2,14 @@
   (:require [amazonica.aws.apigateway :as amazon]
             [lein-lambda.lambda :as lambda]))
 
-(defn- target-arn [region account-id function-name]
+(defn- target-arn [region account-id]
   (str "arn:aws:apigateway:" 
        region
        ":lambda:path/2015-03-31/functions/arn:aws:lambda:"
        region
        ":"
        account-id
-       ":function:"
-       function-name
-       ":${stageVariables.stage}/invocations"))
+       ":function:${stageVariables.functionname}:${stageVariables.stage}/invocations"))
 
 (defn- source-arn [api-id region account-id]
   (str "arn:aws:execute-api:"
@@ -89,7 +87,7 @@
                             :restapi-id api-id)
     (catch Exception _ false)))
 
-(defn- create-integration [api-id proxy-id region account-id function-name]
+(defn- create-integration [api-id proxy-id region account-id]
   (println "Creating integration")
   (amazon/put-integration :restapi-id api-id
                           :resource-id proxy-id
@@ -97,12 +95,12 @@
                           :integration-http-method "POST"
                           :type "AWS_PROXY"
                           :passthrough-behavior "WHEN_NO_MATCH"
-                          :uri (target-arn region account-id function-name)))
+                          :uri (target-arn region account-id)))
 
-(defn- maybe-create-integration [api-id proxy-id region account-id function-name]
+(defn- maybe-create-integration [api-id proxy-id region account-id]
   (or
     (find-integration api-id proxy-id)
-    (create-integration api-id proxy-id region account-id function-name)))  
+    (create-integration api-id proxy-id region account-id)))  
 
 (defn find-stage [api-id stage]
   (try
@@ -114,7 +112,8 @@
   (println "Creating deployment")
   (amazon/create-deployment :restapi-id api-id
                             :stage-name stage
-                            :variables {"stage" stage})
+                            :variables {"functionname" function-name
+                                        "stage" stage})
   (lambda/allow-api-gateway function-name
                             (source-arn api-id region account-id)
                             stage))
@@ -131,5 +130,5 @@
           [root-id proxy-id] (get-resource-ids api-id)]
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
-        (maybe-create-integration api-id proxy-id region account-id function-name)
+        (maybe-create-integration api-id proxy-id region account-id)
         (maybe-create-deployment api-id region account-id function-name stage)))))
