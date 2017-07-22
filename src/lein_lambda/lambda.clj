@@ -103,6 +103,7 @@
 
 (defn- delete-unused-version [function-name function-version aliases]
   (when-not (seq aliases)
+    (println (str "Deleting version " function-version))
     (amazon/delete-function :function-name function-name
                             :qualifier function-version)))
 
