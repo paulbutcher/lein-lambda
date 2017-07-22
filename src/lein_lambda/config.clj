@@ -1,5 +1,6 @@
 (ns lein-lambda.config
-  (:require [schema.core :as s]
+  (:require [leiningen.core.main :refer [abort]]
+            [schema.core :as s]
             [clojure.pprint :refer [pprint]]
             [amazonica.core :as amazonica]))
 
@@ -25,6 +26,8 @@
   (s/validate Config config)
   (let [stage-config (get-in config [:stages stage])
         merge-config #(merge (config %) (stage-config %))]
+    (when-not stage-config
+      (abort (str "Unknown stage: " stage)))
     {:credentials (merge-config :credentials)
      :function    (merge-config :function)
      :s3          (merge-config :s3)

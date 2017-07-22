@@ -1,5 +1,6 @@
 (ns leiningen.lambda
   (:require [leiningen.uberjar :refer [uberjar]]
+            [leiningen.core.main :refer [warn]]
             [clojure.pprint :refer [pprint]]
             [lein-lambda.config :refer [get-config]]
             [lein-lambda.s3 :as s3]
@@ -24,4 +25,4 @@
     (case action
       "deploy" (deploy project config stage)
       "versions" (versions project config stage)
-     (leiningen.core.main/warn "Unknown task."))))
+     (warn (str "Unknown task: " action)))))
