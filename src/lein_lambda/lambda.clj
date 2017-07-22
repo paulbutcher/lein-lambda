@@ -94,6 +94,7 @@
     (:alias-arn (create-or-update-alias function-name stage version))))
 
 (defn- print-version [_ function-version aliases]
+  (print "  ")
   (print function-version)
   (when (seq aliases)
     (print " -> ")
@@ -116,7 +117,8 @@
            function-version
            (filter #(= (:function-version %) function-version) aliases))))))
 
-(defn versions [config stage]
+(defn versions [{{:keys [name]} :function :as config} stage]
+  (println (str "Published versions of function " name ":"))
   (forall-versions config stage print-version))
 
 (defn promote [{{:keys [name]} :function} stage target]
