@@ -93,26 +93,38 @@
     (println "Deployed as version" version)
     (:alias-arn (create-or-update-alias function-name stage version))))
 
-(defn- print-version [version aliases]
-  (let [function-version (:version version)
-        as (filter #(= (:function-version %) function-version) aliases)]
-    (when (not= function-version "$LATEST")
-      (print function-version)
-      (when (seq as)
-        (print " -> ")
-        (print (string/join ", " (map :name as))))
-      (print "\n")
-      (flush))))
+(defn- print-version [_ function-version aliases]
+  (print function-version)
+  (when (seq aliases)
+    (print " -> ")
+    (print (string/join ", " (map :name aliases))))
+  (print "\n")
+  (flush))
 
-(defn versions [{{:keys [name]} :function} stage]
+(defn- delete-unused-version [function-name function-version aliases]
+  (when-not (seq aliases)
+    (amazon/delete-function :function-name function-name
+                            :qualifier function-version)))
+
+(defn- forall-versions [{{:keys [name]} :function} stage f]
   (let [aliases (:aliases (amazon/list-aliases :function-name name))]
-    (doseq [version (:versions (amazon/list-versions-by-function :function-name name))]
-      (print-version version aliases))))
+    (doseq [version (:versions (amazon/list-versions-by-function :function-name name))
+            :let [function-version (:version version)]]
+      (when (not= function-version "$LATEST")
+        (f name
+           function-version
+           (filter #(= (:function-version %) function-version) aliases))))))
 
-(defn promote [{{:keys [name]} :function} stage version]
-  (let [v (or (:function-version (alias-exists? name version)
-               version))]
-    (println (str "Promoting " stage " to version " v))
+(defn versions [config stage]
+  (forall-versions config stage print-version))
+
+(defn promote [{{:keys [name]} :function} stage target]
+  (let [version (or (:function-version (alias-exists? name target))
+                    target)]
+    (println (str "Promoting " stage " to version " version))
     (amazon/update-alias :function-name name
-                        :name stage
-                        :function-version v)))
+                         :name stage
+                         :function-version version)))
+
+(defn cleanup [config stage]
+  (forall-versions config stage delete-unused-version))

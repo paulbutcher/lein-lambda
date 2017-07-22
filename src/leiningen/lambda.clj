@@ -23,4 +23,5 @@
       "deploy" (deploy project config stage)
       "versions" (lambda/versions config stage)
       "promote" (lambda/promote config stage (first args))
+      "cleanup" (lambda/cleanup config stage)
      (warn (str "Unknown task: " action)))))
