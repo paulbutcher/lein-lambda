@@ -92,3 +92,19 @@
   (let [{:keys [version function-name]} (create-or-update (mk-function-config config))]
     (println "Deployed as version" version)
     (:alias-arn (create-or-update-alias function-name stage version))))
+
+(defn- print-version [version aliases]
+  (let [function-version (:version version)
+        as (filter #(= (:function-version %) function-version) aliases)]
+    (when (not= function-version "$LATEST")
+      (print function-version)
+      (when (seq as)
+        (print " -> ")
+        (print (string/join ", " (map :name as))))
+      (print "\n")
+      (flush))))
+
+(defn versions [{{:keys [name]} :function} stage]
+  (let [aliases (:aliases (amazon/list-aliases :function-name name))]
+    (doseq [version (:versions (amazon/list-versions-by-function :function-name name))]
+      (print-version version aliases))))
