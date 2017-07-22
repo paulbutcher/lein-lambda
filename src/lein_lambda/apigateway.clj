@@ -131,4 +131,5 @@
       (let [proxy-id (maybe-create-proxy-resource api-id root-id proxy-id)
             method-id (maybe-create-method api-id proxy-id)]
         (maybe-create-integration api-id proxy-id region account-id)
-        (maybe-create-deployment api-id region account-id function-name stage)))))
+        (maybe-create-deployment api-id region account-id function-name stage)
+        (println (str "URL: https://" api-id ".execute-api." region ".amazonaws.com/" stage "/"))))))
