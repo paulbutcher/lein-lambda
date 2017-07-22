@@ -15,14 +15,12 @@
     (apigateway/deploy config function-arn stage)
     (cloudwatchevents/deploy config function-arn stage)))
 
-(defn- versions [project config stage]
-  (lambda/versions config stage))
-
 (defn lambda
   "TODO: Write documentation"
   [project action stage & args]
   (let [config (get-config (project :lambda) stage)]
     (case action
       "deploy" (deploy project config stage)
-      "versions" (versions project config stage)
+      "versions" (lambda/versions config stage)
+      "promote" (lambda/promote config stage (first args))
      (warn (str "Unknown task: " action)))))

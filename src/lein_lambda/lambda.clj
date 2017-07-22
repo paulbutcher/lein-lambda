@@ -108,3 +108,11 @@
   (let [aliases (:aliases (amazon/list-aliases :function-name name))]
     (doseq [version (:versions (amazon/list-versions-by-function :function-name name))]
       (print-version version aliases))))
+
+(defn promote [{{:keys [name]} :function} stage version]
+  (let [v (or (:function-version (alias-exists? name version)
+               version))]
+    (println (str "Promoting " stage " to version " v))
+    (amazon/update-alias :function-name name
+                        :name stage
+                        :function-version v)))
