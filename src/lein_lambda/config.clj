@@ -8,7 +8,8 @@
   {(s/optional-key :credentials) {(s/optional-key :access-key) s/Str
                                   (s/optional-key :secret-key) s/Str
                                   (s/optional-key :endpoint) s/Str
-                                  (s/optional-key :region) s/Str}
+                                  (s/optional-key :region) s/Str
+                                  (s/optional-key :profile) s/Str}
    (s/optional-key :function) {(s/optional-key :name) s/Str
                                (s/optional-key :handler) s/Str
                                (s/optional-key :description) s/Str
@@ -36,10 +37,11 @@
 
 (defn get-config [config stage]
   (let [c (get-config* config stage)
-        {{:keys [access-key secret-key endpoint region]} :credentials} c]
+        {{:keys [access-key secret-key endpoint region profile]} :credentials} c]
     (amazonica/defcredential (cond-> {}
                               access-key (assoc :access-key access-key)
                               secret-key (assoc :secret-key secret-key)
                               endpoint (assoc :endpoint endpoint)
-                              region (assoc :endpoint region)))
+                              region (assoc :endpoint region)
+                              profile (assoc :profile profile)))
     c))
