@@ -29,7 +29,7 @@
     (get-in role [:role :arn])))
 
 (defn- maybe-deploy-role [function-name]
-  (let [role-name (str function-name "-lambda-" (account-id))]
+  (let [role-name (str function-name "-lambda")]
     (or
       (maybe-get-role-arn role-name)
       (deploy-role role-name))))
