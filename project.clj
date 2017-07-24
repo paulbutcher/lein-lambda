@@ -1,4 +1,4 @@
-(defproject lein-lambda "0.1.0-SNAPSHOT"
+(defproject lein-lambda "0.2.0-SNAPSHOT"
   :description "A Leiningen plugin to automate AWS Lambda deployments"
   :url "https://github.com/paulbutcher/lein-lambda"
   :license {:name "Eclipse Public License"
