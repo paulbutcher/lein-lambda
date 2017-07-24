@@ -1,4 +1,4 @@
-(defproject lambda-api/lein-template "0.1.0"
+(defproject lambda-api/lein-template "0.1.1"
   :description "A Leiningen template for a webservice hosted on AWS Lambda"
   :url "https://github.com/paulbutcher/lein-lambda"
   :license {:name "Eclipse Public License"
