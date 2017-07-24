@@ -11,4 +11,8 @@
               :sanitized (name-to-path name)}]
     (main/info "Generating fresh 'lein new' lambda-api project.")
     (->files data
-             ["src/{{sanitized}}/foo.clj" (render "foo.clj" data)])))
+             ["src/{{sanitized}}/handler.clj" (render "handler.clj" data)]
+             ["src/{{sanitized}}/lambda.clj" (render "lambda.clj" data)]
+             ["test/{{sanitized}}/handler_test.clj" (render "handler_test.clj" data)]
+             ["project.clj" (render "project.clj" data)]
+             [".gitignore" (render "gitignore" data)])))
