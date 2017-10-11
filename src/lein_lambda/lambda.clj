@@ -18,16 +18,16 @@
                          :statement-id statement-id))
 
 (defn allow-api-gateway [function-name source-arn stage]
-  (add-permission function-name 
+  (add-permission function-name
                   source-arn
                   "apigateway.amazonaws.com"
                   "lein-lambda-apigateway"
                   stage))
 
 (defn allow-wakeup [function-name source-arn stage]
-  (add-permission function-name 
-                  source-arn 
-                  "events.amazonaws.com" 
+  (add-permission function-name
+                  source-arn
+                  "events.amazonaws.com"
                   "lein-lambda-warmup"
                   stage))
 
@@ -117,11 +117,15 @@
            function-version
            (filter #(= (:function-version %) function-version) aliases))))))
 
-(defn versions [{{:keys [name]} :function :as config} stage]
+(defn versions
+  "List all deployed versions"
+  [{{:keys [name]} :function :as config} stage]
   (println (str "Published versions of function " name ":"))
   (forall-versions config stage print-version))
 
-(defn promote [{{:keys [name]} :function} stage target]
+(defn promote
+  "Promote stage to target (can be a version or another stage)"
+  [{{:keys [name]} :function} stage target]
   (let [version (or (:function-version (alias-exists? name target))
                     target)]
     (println (str "Promoting " stage " to version " version))
@@ -129,5 +133,7 @@
                          :name stage
                          :function-version version)))
 
-(defn cleanup [config stage]
+(defn cleanup
+  "Delete any versions not associated with a stage"
+  [config stage]
   (forall-versions config stage delete-unused-version))

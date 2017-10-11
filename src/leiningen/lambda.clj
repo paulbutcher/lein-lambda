@@ -8,7 +8,9 @@
             [lein-lambda.apigateway :as apigateway]
             [lein-lambda.cloudwatchevents :as cloudwatchevents]))
 
-(defn- deploy [project config stage]
+(defn- deploy
+  "Deploy a new version of a Lambda function, associated with given stage"
+  [project config stage]
   (let [jar-file (uberjar project)]
     (s3/upload config jar-file))
   (let [function-arn (lambda/deploy config stage)]
@@ -16,7 +18,8 @@
     (cloudwatchevents/deploy config function-arn stage)))
 
 (defn lambda
-  "TODO: Write documentation"
+  "A Leiningen plugin to automate AWS Lambda deployments"
+  {:subtasks [#'deploy #'lambda/versions #'lambda/promote #'lambda/cleanup]}
   [project action stage & args]
   (let [config (get-config (project :lambda) stage)]
     (case action
