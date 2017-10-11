@@ -50,7 +50,8 @@ Published versions of function «name»:
 ### Promote from staging to production:
 
 ```ShellSession
-$ lein lambda promote production staging Promoting production to version 2
+$ lein lambda promote production staging
+Promoting production to version 2
 $ lein lambda versions production
 Published versions of function greeter-api:
   1
