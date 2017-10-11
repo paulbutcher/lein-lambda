@@ -80,10 +80,10 @@ Here's a complete list of all configuration options:
 
 ```Clojure
 :lambda {:credentials {:access-key "..." ; Your AWS credentials etc.
-                       :secret-key "..." ; Typically you won't specify them here,
-                       :endpoint "..."   ; but instead use any of the mechanisms
-                       :region "..."     ; supprted by the AWS Default Credential
-                       :profile "..."}   ; Provider Chain
+                       :secret-key "..." ;   Typically you won't specify them here, but instead
+                       :endpoint "..."   ;   use any of the mechanisms supported by the AWS
+                       :region "..."     ;   Default Credential Provider Chain
+                       :profile "..."}
 
          :function {:name "..."          ; Name of your Lambda function (required)
                     :handler "..."       ; Name of your handler (required)
@@ -95,10 +95,8 @@ Here's a complete list of all configuration options:
          :api-gateway {:name "..."}      ; Optional
          :warmup {:enable false}         ; Optional, false by default
          :stages {"stage1" {...}         ; Stage definitions.
-                  "stage2" {...}}})
+                  "stage2" {...}}})      ;   All above settings can be overridden per-stage
 ```
-
-Any of the base settings can be overridden per-stage.
 
 ## License
 
