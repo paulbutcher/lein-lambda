@@ -58,6 +58,48 @@ Published versions of function greeter-api:
   2 -> production, staging
 ```
 
+## Configuration
+
+This plugin allows you to deploy an AWS Lambda function written in Clojure. It allows you to have multiple stages (typically "production" and "staging"). Each time you deploy, a new version of the Lambda function is created. Stages can be updated (promoted) to point to a specific version as needed.
+
+Optionally, you can create an API Gateway API that forwards HTTP requests to your Lambda function. Corresponding API Gateway stages will be created for each of your Lambda function's stages.
+
+Optionally, you can setup a "warmup" event that will keep your Lambda function warm by calling it periodically.
+
+Here is a minimal configuration with two stages "production" and "staging":
+
+```Clojure
+:lambda {:function {:name "my-api"
+                    :handler "my-api.lambda.LambdaFn"}
+         :api-gateway {:name "my-api"}
+         :stages {"production" {:warmup {:enable true}}
+                  "staging"    {}}})
+```
+
+Here's a complete list of all configuration options:
+
+```Clojure
+:lambda {:credentials {:access-key "..." ; Your AWS credentials etc.
+                       :secret-key "..." ; Typically you won't specify them here,
+                       :endpoint "..."   ; but instead use any of the mechanisms
+                       :region "..."     ; supprted by the AWS Default Credential
+                       :profile "..."}   ; Provider Chain
+
+         :function {:name "..."          ; Name of your Lambda function (required)
+                    :handler "..."       ; Name of your handler (required)
+                    :description "..."   ; Optional
+                    :memory-size 512     ; Optional, 512MB by default
+                    :timeout 60          ; Optional, 60 seconds by default
+                    :role "..."}         ; Optional, will be created if not specified
+         :s3 {:bucket "..."}             ; Optional, will be created if not specified
+         :api-gateway {:name "..."}      ; Optional
+         :warmup {:enable false}         ; Optional, false by default
+         :stages {"stage1" {...}         ; Stage definitions.
+                  "stage2" {...}}})
+```
+
+Any of the base settings can be overridden per-stage.
+
 ## License
 
 Copyright © 2017 Paul Butcher
