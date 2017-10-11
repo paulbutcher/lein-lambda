@@ -24,7 +24,7 @@ $ lein lambda deploy production
 URL: https://7zxad5v8l2.execute-api.eu-west-1.amazonaws.com/production/
 ```
 
-The URL printed at the end of the deployment process is the API Gateway endpoint at which it’s been published (yours will be different—API Gateway will generate one for you). We can confirm that it’s working with `curl`:
+The URL printed at the end of the deployment process is the API Gateway endpoint at which it’s been published (yours will be different—API Gateway will generate one for you). You can confirm that it’s working with `curl`:
 
 ```ShellSession
 $ curl https://7zxad5v8l2.execute-api.eu-west-1.amazonaws.com/production/hello
