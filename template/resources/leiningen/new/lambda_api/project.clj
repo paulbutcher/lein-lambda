@@ -10,7 +10,7 @@
                  [cheshire "5.7.1"]
                  [ring-apigw-lambda-proxy "0.3.0"]]
   :plugins [[lein-ring "0.9.7"]
-            [lein-lambda "0.1.0"]]
+            [lein-lambda "0.2.0"]]
   :ring {:handler {{name}}.handler/app}
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
