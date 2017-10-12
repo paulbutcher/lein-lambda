@@ -10,8 +10,6 @@ Deploying to Lambda requires that you provide your AWS credentials (your access 
 
 ### Create a new project
 
-Create a new project:
-
 ```ShellSession
 $ lein new lambda-api «name»
 ```
