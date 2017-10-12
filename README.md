@@ -98,6 +98,10 @@ Here's a complete list of all configuration options:
                   "stage2" {...}}})      ;   All above settings can be overridden per-stage
 ```
 
+## Alteratives
+
+This plugin was inspired by, but takes a slightly different approach from [clj-lambda-utils](https://github.com/mhjort/clj-lambda-utils)
+
 ## License
 
 Copyright © 2017 Paul Butcher
