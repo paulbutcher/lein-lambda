@@ -22,7 +22,7 @@
 
 (defn- find-api [name]
   (:id (let [apis ((amazon/get-rest-apis :limit 500) :items)]
-         (first (filter #(get % :name) apis)))))
+         (first (filter #(= (get % :name) name) apis)))))
 
 (defn- create-api [name]
   (println "Creating API:" name)
